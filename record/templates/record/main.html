@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block own_style %}
+<link rel="stylesheet" href="{% static 'record/css/style.css' %}">
+{% endblock own_style %}
+
+{% block main-content %}
+<h1>Personal Record</h1>
+<p class="mb-5">Detail Temuan Diagnosa Penyakit Jantung Pasien</p>
+
+<div class="container mb-5 custom-container">
+    <h3 class="mb-3 text-center">Patient Records</h3>
+
+    <!-- Search Box -->
+    <div class="d-flex justify-content-center align-items-center mb-4">
+        <input 
+        type="text" 
+        id="searchPatient" 
+        class="form-control" 
+        placeholder="Cari berdasarkan NIK"
+        oninput="suggestionPatient()"
+        onclick="showSuggestions()" 
+        maxlength="16">
+    </div>
+
+    <!-- Tampilkan Kartu Pasien -->
+    <div id="patientCards" class="row justify-content-center mb-3 w-100" style="display: none;">
+    <!-- Kartu template -->
+        <!-- <div class="card card-template d-none">
+            <div class="card-body">
+                <h5 class="card-title"></h5>
+                <p class="card-text nik"></p>
+                <a href="#" class="btn btn-primary">Lihat Detail</a>
+            </div>
+        </div> -->
+    </div>
+
+    
+</div>
+{% endblock main-content %}
+
+{% block own-script %}
+<script src="{% static 'record/js/search.js' %}"></script>
+{% endblock own-script %}

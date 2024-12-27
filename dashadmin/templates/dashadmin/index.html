@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block own_style %}
+<link rel="stylesheet" href="{% static 'dashadmin/css/style.css' %}">
+{% endblock own_style %}
+    
+
+{% block main-content %}
+<h1>Administrator Information</h1>
+<p class="mb-5">Informasi Admin dan Alat perekaman</p>
+<!-- Card Container -->
+<div class="container mb-5 custom-container">
+    <div class="row mb-3">
+        <!-- Div 1: Device Information -->
+        <div class="col-md-6">
+            <div class="card h-100 d-flex flex-column p-3">
+                <h5 class="fs-2 fw-bold mb-3">Informasi Device</h5>
+                <p class="mb-1">Nama Perangkat:</p>
+                <p class="fs-5 fw-medium">Smart Holter Portable 001</p>
+                <p class="mb-1">Baterai:</p>
+                <p class="fs-5 fw-medium">85%</p>
+                <p class="mb-1">Status Koneksi:</p>
+                <p class="fs-5 fw-medium text-success">Tersambung</p>
+            </div>
+        </div>
+        <!-- Div 2: Admin Information -->
+        <div class="col-md-6">
+            <div class="card h-100 d-flex flex-column p-3">
+                <h5 class="fs-2 fw-bold mb-3">Informasi Admin</h5>
+                <p class="mb-1">Nama Admin:</p>
+                <p class="fs-5 fw-medium">Joseph Kieran</p>
+                <p class="mb-1">ID:</p>
+                <p class="fs-5 fw-medium">990 33994 99213</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dropdown for MQTT Broker Selection -->
+    <div class="mb-3">
+        <label for="port-selection" class="form-label">Pilih Broker MQTT</label>
+        <select class="form-select" id="port-selection">
+            <option selected>Pilih Port</option>
+            <option value="broker1">1</option>
+            <option value="broker2">2</option>
+            <option value="broker3">3</option>
+        </select>
+    </div>
+</div>
+{% endblock %}
+    

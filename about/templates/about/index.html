@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block own_css %}
+<link rel="stylesheet" href="{% static 'about/css/style.css' %}">   
+{% endblock own_css %}
+
+
+{% block main-content %}
+<h1>About</h1>
+<p class="mb-3">Tentang situs web ini</p>
+<div class="container mb-5 custom-container">
+    <p class="mb-3">
+        Selamat datang di <strong>Website Pemantauan EKG Real-Time</strong>, sebuah platform inovatif yang dirancang untuk mendukung kebutuhan pemantauan kesehatan jantung secara efisien dan praktis. Website ini memungkinkan pengguna untuk memantau sinyal elektrokardiogram (EKG) secara langsung melalui perangkat <strong>Smart Holter Portable 5 Lead</strong>, sebuah teknologi canggih yang dirancang untuk merekam aktivitas jantung dengan presisi tinggi.
+    </p>
+    <p class="mb-3">
+        Proyek ini merupakan hasil dari inovasi laboratorium <strong>Cogno Technology and Artificial Intelligence</strong>, bagian dari Departemen Teknik Elektro, Universitas Padjadjaran. Dengan menggabungkan teknologi pemrosesan sinyal dan kecerdasan buatan, platform ini bertujuan untuk memberikan solusi kesehatan digital yang handal, fleksibel, dan mudah digunakan, baik oleh tenaga medis maupun pasien.
+    </p>
+    <p class="mb-3">
+        Kami berkomitmen untuk mendukung pengembangan teknologi kesehatan di Indonesia, serta memberikan kontribusi nyata dalam meningkatkan kualitas pemantauan jantung untuk mencegah dan mengelola gangguan kesehatan kardiovaskular. <strong>Website ini merupakan langkah awal menuju transformasi digital dalam dunia medis, khususnya di bidang kardiologi.</strong>
+    </p>
+    <h4 class="mt-4">Fitur Utama:</h4>
+    <ul>
+        <li><strong>Pemantauan Real-Time:</strong> Akses data EKG secara langsung kapan saja dan di mana saja.</li>
+        <li><strong>Rekaman Presisi Tinggi:</strong> Perekaman data dengan 5 lead untuk analisis yang lebih komprehensif.</li>
+        <li><strong>User-Friendly Interface:</strong> Tampilan yang sederhana dan intuitif untuk semua jenis pengguna.</li>
+    </ul>
+    <p class="mt-4">
+        Terima kasih telah menjadi bagian dari perjalanan inovasi kami. Bersama, kita dapat menciptakan solusi kesehatan yang lebih baik untuk masa depan.
+    </p>
+</div>
+{% endblock main-content %}
+
+    

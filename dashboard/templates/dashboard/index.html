@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+{% csrf_token %}
+
+{% block main-content %}
+<div class="container custom-container">
+    <h1 class="mb-0">Dashboard</h1>
+</div>
+<p class="container mb-5 custom-container">Website monitoring perekaman EKG real-time Smart Holter Portable</p>
+<!-- Card Container -->
+<div class="container mb-5 custom-container">
+    <!-- Tombol Rekam
+    <div class="d-flex justify-content-end">
+        <button type="button" class="btn btn-primary mb-1 me-3 custom-width" onclick="showConfirmationModal()">Rekam</button>
+    </div> -->
+    <!-- Tombol Rekam / Hentikan Rekam -->
+    <div class="d-flex justify-content-end">
+        <button type="button" id="recordButton" class="btn btn-primary mb-1 me-3 custom-width" onclick="toggleRecording()">Rekam</button>
+    </div>
+    <h3 class='mb-3'>Informasi Pengguna</h3>
+    <div class="row">
+        <!-- Card 1 -->
+        <div class="col-md-4 d-flex justify-content-center">
+            <div class="card card-custom h-100 w-100">
+                <div class="row no-gutters align-items-start">
+                    <div class="col-8">
+                        <div class="card-body patient-info">
+                            <div>
+                                <h6 class="fs-6 fw-normal">Nama Pasien:<h6>
+                                <p class="fs-3 fw-bold" id="patient-name">-<p>
+                            </div>
+                            <div>
+                                <h6 class="fs-6 mb-1 fw-normal">Waktu Perekaman:</h6>
+                                <p class="fw-medium" id="recording-time">-</p>
+                            </div>
+                            <div>
+                                <h6 class="fs-6 mb-1 fw-normal">Usia:</h6>
+                                <p class="fw-medium" id="patient-age">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="col-md-4 d-flex justify-content-center">
+            <div class="card card-custom h-100 w-100">
+                <div class="row no-gutters align-items-start">
+                    <div class="col-8">
+                        <div class="card-body patient-info">
+                            <div>
+                                <h6 class="fs-6 fw-normal">Nama Admin:<h6>
+                                <p class="fs-3 fw-bold" id="admin-name">-<p>
+                            </div>
+                            <div>
+                                <h6 class="fs-6 mb-1 fw-normal">Status Perangkat:</h6>
+                                <p class="fw-medium text-danger" id="device-status">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Card 3 -->
+        <div class="col-md-4 d-flex justify-content-center">
+            <div class="card card-custom text-center h-100 w-100">
+                <div class="card-body d-flex flex-column align-items-center">
+                    <!-- Icon Jantung -->
+                    <span class="material-symbols-outlined" style="font-size: 64px; color: rgb(114, 14, 144);">ecg_heart</span>
+                    <!-- Teks Diagnosa -->
+                    <h5 class="mt-3 fs-5">Diagnosa Terkini</h5>
+                    <!-- Status Diagnosa -->
+                    <p class="fw-bold fs-3 text-danger" id="diagnosis-status">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- <div class="container custom-container">
+    <h3 class='mb-3'>Grafik EKG Real-time</h3>
+    <div class="row justify-content-center">
+        <h5 class="card-title text-center">Channel I</h5>
+        <canvas class="my-5 w-100" id="dummyGraph" width="674" height="284"></canvas>
+        <h5 class="card-title text-center">Channel II</h5>
+        <canvas class="my-5 w-100" id="dummyGraph1" width="674" height="284"></canvas>
+        <h5 class="card-title text-center">Channel V1</h5>
+        <canvas class="my-5 w-100" id="dummyGraph2" width="674" height="284"></canvas>
+    </div>
+</div> -->
+{% endblock %}
+
+{% block modal %}
+<!-- Modal: Konfirmasi Perekaman -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmationModalLabel">Konfirmasi Perekaman</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Apakah Pasien sudah pernah melakukan perekaman?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="openRegistrationModal()">Belum</button>
+                <button type="button" class="btn btn-primary" onclick="showNameInputModal()">Sudah</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Masukkan NIK -->
+<div class="modal fade" id="nameInputModal" tabindex="-1" aria-labelledby="nameInputModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="nameInputModalLabel">Masukkan NIK Pasien</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="nameForm" method="post">
+                    <div class="mb-3 position-relative">
+                        <label for="inputNIK" class="form-label">NIK Pasien</label>                            
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="inputNIK"
+                            placeholder="Masukkan NIK pasien"
+                            oninput="filterSuggestions()"
+                            onclick="showSuggestions()"
+                            required
+                        />
+                        <div
+                            id="suggestionBox"
+                            class="dropdown-menu w-100 show"
+                            style="display: none;"
+                        ></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="startRecording(event)" id="continueRecording">Rekam</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Formulir Pendaftaran -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalLabel">Formulir Pendaftaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registrationForm" method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nama</label>
+                        <input type="text" class="form-control" id="name" placeholder="Masukkan nama anda" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="umur" class="form-label">Umur</label>
+                        <input type="number" class="form-control" id="umur" placeholder="Masukkan umur anda" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="NIK" class="form-label">NIK</label>
+                        <input type="text" class="form-control" id="NIK" placeholder="Masukkan NIK anda" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitForm()">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi -->
+<div class="modal fade" id="formResultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Pendaftaran Berhasil!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p><strong>Nama:</strong> <span id="confirmName"></span></p>
+                <p><strong>Umur:</strong> <span id="confirmUmur"></span></p>
+                <p><strong>NIK:</strong> <span id="confirmNIK"></span></p>
+                <button class="btn btn-primary mt-3" onclick="startRecording(event)" id="startRecording">MULAI REKAM</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block own-script %}
+<script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
+<script src="{% static 'dashboard/js/rekam_n.js' %}"></script>
+<!-- <script src="{% static 'dashboard/js/graph.js' %}"></script> -->
+{% endblock %}

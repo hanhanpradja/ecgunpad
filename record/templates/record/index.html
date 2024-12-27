@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block own_style %}
+<link rel="stylesheet" href="{% static 'record/css/style.css' %}">
+{% endblock own_style %}
+
+{% block main-content %}
+<h1>Personal Record</h1>
+<p class="mb-5">Detail Temuan diagnosa penyakit jantung pasien</p>
+
+<div class="container mb-5 custom-container">
+    <h3 class="mb-3">Record Table</h3>
+
+    <!--Filter di bagian atas tabel-->
+    <form method="get" class="d-flex justify-content-end align-items-center mb-3 gap-3">
+        <!-- Hidden input untuk ID pasien -->
+        <input type="hidden" name="id_pasien" value="{{ request.GET.id_pasien }}">
+
+        <!-- Dropdown untuk filter bulan -->
+        <div class="d-flex align-items-center">
+            <label for="monthFilter" class="form-label me-2">Filter Bulan:</label>
+            <select id="monthFilter" name="bulan" class="form-select w-auto">
+                <option value="all" {% if bulan_filter == 'all' %}selected{% endif %}>Semua Bulan</option>
+                <option value="01" {% if bulan_filter == '01' %}selected{% endif %}>Januari</option>
+                <option value="02" {% if bulan_filter == '02' %}selected{% endif %}>Februari</option>
+                <option value="03" {% if bulan_filter == '03' %}selected{% endif %}>Maret</option>
+                <option value="04" {% if bulan_filter == '04' %}selected{% endif %}>April</option>
+                <option value="05" {% if bulan_filter == '05' %}selected{% endif %}>Mei</option>
+                <option value="06" {% if bulan_filter == '06' %}selected{% endif %}>Juni</option>
+                <option value="07" {% if bulan_filter == '07' %}selected{% endif %}>Juli</option>
+                <option value="08" {% if bulan_filter == '08' %}selected{% endif %}>Agustus</option>
+                <option value="09" {% if bulan_filter == '09' %}selected{% endif %}>September</option>
+                <option value="10" {% if bulan_filter == '10' %}selected{% endif %}>Oktober</option>
+                <option value="11" {% if bulan_filter == '11' %}selected{% endif %}>November</option>
+                <option value="12" {% if bulan_filter == '12' %}selected{% endif %}>Desember</option>
+            </select>
+        </div>
+
+        <!-- Dropdown untuk memilih jumlah baris -->
+        <div class="d-flex align-items-center">
+            <label for="rowsPerPage" class="form-label me-2">Tampilkan:</label>
+            <select id="rowsPerPage" name="rows_per_page" class="form-select w-auto">
+                <option value="10" {% if rows_per_page == "10" %}selected{% endif %}>10</option>
+                <option value="25" {% if rows_per_page == "25" %}selected{% endif %}>25</option>
+                <option value="50" {% if rows_per_page == "50" %}selected{% endif %}>50</option>
+                <option value="100" {% if rows_per_page == "100" %}selected{% endif %}>100</option>
+            </select>
+        </div>
+
+        <!-- Tombol Apply Filter -->
+        <button type="submit" class="btn btn-primary">Terapkan</button>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Diagnosa</th>
+                    <th scope="col">Tanggal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in rekaman_data %}
+                <tr onclick="window.location.href='detail/?id_rekaman={{ record.id_rekaman }}'">
+                    <th scope="row">{{ forloop.counter }}</th>
+                    <td>{{ record.klasifikasi }}</td>
+                    <td>{{ record.tanggal }}/{{ record.bulan }}/{{ record.tahun }}</td>
+                </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">Tidak ada data rekaman untuk pasien ini.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if rekaman_data.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?id_pasien={{ request.GET.id_pasien }}&bulan={{ bulan_filter }}&rows_per_page={{ rows_per_page }}&page={{ rekaman_data.previous_page_number }}" aria-label="Previous">
+                        &laquo;
+                    </a>
+                </li>
+            {% endif %}
+            {% for num in rekaman_data.paginator.page_range %}
+                <li class="page-item {% if rekaman_data.number == num %}active{% endif %}">
+                    <a class="page-link" href="?id_pasien={{ request.GET.id_pasien }}&bulan={{ bulan_filter }}&rows_per_page={{ rows_per_page }}&page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+            {% if rekaman_data.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?id_pasien={{ request.GET.id_pasien }}&bulan={{ bulan_filter }}&rows_per_page={{ rows_per_page }}&page={{ rekaman_data.next_page_number }}" aria-label="Next">
+                        &raquo;
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endblock main-content %}

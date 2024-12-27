@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block own_style %}
+<link rel="stylesheet" href="{% static 'record/css/style.css' %}">
+{% endblock own_style %}
+
+{% block main-content %}
+<div class="container mb-5 custom-container">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1 class="text-start mb-4">Detail Record</h1>
+            </div>
+        </div>
+        <div class="row g-4">
+            <!-- RR -->
+            <div class="col-md-4">
+                <div class="card card-custom text-center d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <div>
+                        <div class="fs-3 fw-bold">RR</div>
+                        <div class="card-body-custom">{{ detail_interval_data.interval_rr }}</div>
+                    </div>
+                </div>
+            </div>
+            <!-- PR -->
+            <div class="col-md-4">
+                <div class="card card-custom text-center d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <div class="fs-3 fw-bold">PR</div>
+                    <div class="card-body-custom">{{ detail_interval_data.interval_pr }}</div>
+                </div>
+            </div>
+            <!-- QRS -->
+            <div class="col-md-4">
+                <div class="card card-custom text-center d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <div class="fs-3 fw-bold">QRS</div>
+                    <div class="card-body-custom">{{ detail_interval_data.interval_qrs }}</div>
+                </div>
+            </div>
+            <!-- QT -->
+            <div class="col-md-4">
+                <div class="card card-custom text-center d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <div class="fs-3 fw-bold">QT</div>
+                    <div class="card-body-custom">{{ detail_interval_data.interval_qt }}</div>
+                </div>
+            </div>
+            <!-- ST -->
+            <div class="col-md-4">
+                <div class="card card-custom text-center d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <div class="fs-3 fw-bold">ST</div>
+                    <div class="card-body-custom">{{ detail_interval_data.interval_st }}</div>
+                </div>
+            </div>
+            <!-- R/S -->
+            <div class="col-md-4">
+                <div class="card card-custom text-center d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <div class="fs-3 fw-bold">Rasio R/S</div>
+                    <div class="card-body-custom">{{ detail_interval_data.rs_ratio }}</div>
+                </div>
+            </div>
+            <!-- BPM -->
+            <div class="col-md-4">
+                <div class="card card-custom text-center d-flex align-items-center justify-content-center" style="height: 100px;">
+                    <div class="fs-3 fw-bold">BPM</div>
+                    <div class="card-body-custom">{{ detail_interval_data.bpm }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container custom-container">
+    <h3 class='mb-3'>Grafik Real-time</h3>
+    <div class="row justify-content-center">
+        <h5 class="card-title text-center">Channel I</h5>
+        <canvas class="my-4 w-100" id="dummyGraph" width="674" height="284"></canvas>
+        <h5 class="card-title text-center">Channel II</h5>
+        <canvas class="my-4 w-100" id="dummyGraph1" width="674" height="284"></canvas>
+        <h5 class="card-title text-center">Channel V1</h5>
+        <canvas class="my-4 w-100" id="dummyGraph2" width="674" height="284"></canvas>
+    </div>
+</div>
+{% endblock main-content %}
+
+
+{% block own-script %}
+<!-- <script type="text/javascript">
+    const signalData = {{ sinyal_ekg_data|safe }};
+    const signal = signalData[0];
+
+    const ctx1 = document.getElementById('dummyGraph');
+    const ctx2 = document.getElementById('dummyGraph1');
+    const ctx3 = document.getElementById('dummyGraph2');
+
+    // Get context untuk grafik
+    const context1 = ctx1.getContext('2d');
+    const context2 = ctx2.getContext('2d');
+    const context3 = ctx3.getContext('2d');
+
+    // Inisialisasi grafik EKG
+    const ekgChart1 = new Chart(context1, {
+        type: 'line',
+        data: {
+            labels: signal.I.map((_, index) => index),
+            datasets: [{
+                label: 'Sinyal EKG Saluran I',
+                data: signal.I,
+                borderColor: 'rgba(255, 0, 0, 1)',
+                backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { beginAtZero: true, title: { display: true, text: 'Time (ms)' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Amplitude (mV)' }, suggestedMin: -0.5, suggestedMax: 1.5 }
+            }
+        }
+    });
+
+    const ekgChart2 = new Chart(context2, {
+        type: 'line',
+        data: {
+            labels: signal.II.map((_, index) => index),
+            datasets: [{
+                label: 'Sinyal EKG Saluran II',
+                data: signal.II,
+                borderColor: 'rgba(0, 255, 0, 1)',
+                backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 0
+            }]
+        },
+        options: { 
+            responsive: true,
+            scales: {
+                x: { beginAtZero: true, title: { display: true, text: 'Time (ms)' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Amplitude (mV)' }, suggestedMin: -0.5, suggestedMax: 1.5 }
+            }
+            }
+    });
+
+    const ekgChart3 = new Chart(context3, {
+        type: 'line',
+        data: {
+            labels: signal.V1.map((_, index) => index),
+            datasets: [{
+                label: 'Sinyal EKG Saluran V1',
+                data: signal.V1,
+                borderColor: 'rgba(0, 0, 255, 1)',
+                backgroundColor: 'rgba(0, 0, 255, 0.1)',
+                borderWidth: 2,
+                tension: 0.3,
+                pointRadius: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: { beginAtZero: true, title: { display: true, text: 'Time (ms)' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Amplitude (mV)' }, suggestedMin: -0.5, suggestedMax: 1.5 }
+            }
+        }
+    });
+</script> -->
+<script src="{% static 'record/js/graph.js' %}"></script>
+{% endblock own-script %}
+    

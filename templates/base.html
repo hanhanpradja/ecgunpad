@@ -1,0 +1,36 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    {% include "snippets/style.html" %}
+    {% include "snippets/script.html" %}
+    
+    {% block own_style %}
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    {% endblock own_style %}
+        
+</head>
+<body>
+    <div class="d-flex">
+        {% include "snippets/sidebar.html" %}
+        <div class="content w-100">
+            {% block main-content%}
+ 
+            {% endblock %}
+        </div>
+    </div>
+
+    {% block modal %}
+    
+    {% endblock %}
+    <!-- JavaScript -->
+    {% block own-script %}
+
+    {% endblock %}
+
+</body>
+</html>
