@@ -122,7 +122,6 @@ async function submitForm() {
 
 async function startRecording(event) {
     const buttonId = event.target.id;
-
     try {
         let pasienId;
 
@@ -205,10 +204,12 @@ async function startRecording(event) {
 
         // if (!recordResponse.ok) throw new Error("Gagal memulai perekaman.");
         // const recordResult = await recordResponse.json();
+
         const recordResult = await handleFetchResponse(recordResponse)
         console.log("Proses perekaman dimulai:", recordResult);
 
-        // Perbarui tombol perekaman
+        pollingInterval = setInterval(pollProcessStatus, 2000)
+
         isRecording = !isRecording
         const startButton = document.getElementById('recordButton');
         startButton.textContent = "Hentikan Perekaman";
@@ -217,7 +218,12 @@ async function startRecording(event) {
         initializePusher();
 
     } catch (error) {
-        stopRecording(); // Hentikan perekaman jika terjadi kesalahan
+        await stopRecording(); // Hentikan perekaman jika terjadi kesalahan
+        if (isRecording === true) {
+            isRecording = !isRecording
+            const startButton = document.getElementById('recordButton')
+            startButton.textContent = 'Rekam'
+        }
         console.error("Terjadi kesalahan:", error);
         alert("Terjadi kesalahan: " + error.message);
     }
@@ -297,12 +303,6 @@ function stopRecording() {
     });
 }
 
-function forcedStop() {
-    fetch ('/test-process-data/'), {
-        
-    }
-}
-
 
 function getCookie(name) {
     let cookieValue = null;
@@ -324,6 +324,37 @@ async function handleFetchResponse(response) {
         const errorData = await response.json(); // Parsing JSON error
         const errorMessage = errorData.error || "Terjadi kesalahan pada server.";
         throw new Error(errorMessage);
+            
     }
     return await response.json(); // Jika tidak ada masalah, lanjutkan parsing hasil
+}
+
+async function pollProcessStatus() {
+    try {
+        const response = await fetch('/get-process-status/');
+        const status = await response.json();
+        console.log(status);
+        if (status.status === 'stopped') {
+            clearInterval(pollingInterval);
+            await stopRecording(); // Hentikan perekaman jika terjadi kesalahan
+            if (isRecording === true) {
+                isRecording = !isRecording
+                const startButton = document.getElementById('recordButton')
+                startButton.textContent = 'Rekam'
+            }
+            console.error("Terjadi kesalahan:", status.error);
+            alert("Terjadi kesalahan: " + status.error.message);
+        }
+        
+    } catch(error) {
+        clearInterval(pollingInterval);
+        await stopRecording();
+        if (isRecording === true) {
+            isRecording = !isRecording
+            const startButton = document.getElementById('recordButton')
+            startButton.textContent = 'Rekam'
+        }
+        console.error("Gagal mendapatkan status proses:", error);
+        alert("Gagal mendapatkan status proses.");
+    }
 }

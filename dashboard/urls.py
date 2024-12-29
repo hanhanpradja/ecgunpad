@@ -9,7 +9,8 @@ urlpatterns = [
     path("process-data/", views.process_data, name='process_data'),
     path("stop-process/", views.stop_process, name='stop_process'),
     path("check-nik/", views.check_nik, name='check_nik'),
-    path("test-process-data/", views.test_process_data, name='test_process_data')
+    path("test-process-data/", views.test_process_data, name='test_process_data'),
+    path('get-process-status/', views.get_process_status, name='get_process_status')
 ]
 
 
