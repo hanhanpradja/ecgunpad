@@ -87,7 +87,7 @@ def new_pasien_rekam(request):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-def process_data(stop_event, data, pasien_id):
+def process_data(stop_event, data, pasien_id, ports):
     global status_data
     try:
         status_data = {'status':'process', 'error':None}
@@ -101,7 +101,7 @@ def process_data(stop_event, data, pasien_id):
                 raise Exception('Pasien tidak ditemukan')
             
             # koneksi ke device
-            result = record_bluetooth_data(port='COM8')
+            result = record_bluetooth_data(port=ports)
 
             # validasi data
             if not result or not isinstance(result, dict):
@@ -114,20 +114,21 @@ def process_data(stop_event, data, pasien_id):
             for i in column:
                 channel = np.array(result[i])
                 to_mv = channel * (2.4 / ((2**24))) * 1000
-                denoised = dwt_denoise(to_mv, wavelet='sym8', level=3)
+                blw = remove_baseline_wander_wavelet(to_mv, 'db4')
+                denoised = dwt_denoise(blw, wavelet='sym8', level=3)
                 # denoised = filter_ecg_signal(to_mv, sampling_rate)
-                all_channel_cleaned[i] = denoised
+                all_channel_cleaned[i] = list(denoised)
             
             # deteksi puncak r
             r_peaks = {}
             for i in column:
-                _, r = nk.ecg_peaks(all_channel_cleaned[i], sampling_rate)
+                _, r = nk.ecg_peaks(np.array(all_channel_cleaned[i]), sampling_rate)
                 r_peaks[i] = r['ECG_R_Peaks']
 
             # fitur ekstraksi
             ch_features = {}
             for i in column:
-                features = calculate_features(all_channel_cleaned[i], detect_pqrst(all_channel_cleaned[i], r_peaks[i], sampling_rate=sampling_rate), sampling_rate=sampling_rate)
+                features = calculate_features(np.array(all_channel_cleaned[i]), detect_pqrst(np.array(all_channel_cleaned[i]), r_peaks[i], sampling_rate=sampling_rate), sampling_rate=sampling_rate)
                 ch_features[i] = features
 
             # Prediksi menggunakan model TensorFlow
@@ -149,28 +150,27 @@ def process_data(stop_event, data, pasien_id):
             print(classification_result)
 
             # Simpan data ke database jika hasil tidak NORMAL
-            if classification_result != 'NORMAL':
-                rekaman = RekamanEKG.objects.create(
-                    id_pasien_id=pasien_id,
-                    tanggal=datetime.now().day,
-                    bulan=datetime.now().month,
-                    tahun=datetime.now().year,
-                    klasifikasi=classification_result
-                )
-                IntervalData.objects.create(
-                    id_rekaman=rekaman,
-                    interval_rr=features_for_model[0],
-                    interval_pr=features_for_model[1],
-                    interval_qrs=features_for_model[2],
-                    interval_qt=features_for_model[3],
-                    interval_st=features_for_model[4],
-                    rs_ratio=features_for_model[5],
-                    bpm=features_for_model[6]
-                )
-                SinyalData.objects.create(
-                    id_rekaman=rekaman,
-                    sinyal_ekg_10s=json.dumps(result)
-                )
+            rekaman = RekamanEKG.objects.create(
+                id_pasien_id=pasien_id,
+                tanggal=datetime.now().day,
+                bulan=datetime.now().month,
+                tahun=datetime.now().year,
+                klasifikasi=classification_result
+            )
+            IntervalData.objects.create(
+                id_rekaman=rekaman,
+                interval_rr=round(features_for_model[0], 1),
+                interval_pr=round(features_for_model[1], 1),
+                interval_qrs=round(features_for_model[2], 1),
+                interval_qt=round(features_for_model[3], 1),
+                interval_st=round(features_for_model[4], 1),
+                rs_ratio=round(features_for_model[5], 1),
+                bpm=round(features_for_model[6], 1)
+            )
+            SinyalData.objects.create(
+                id_rekaman=rekaman,
+                sinyal_ekg_10s=json.dumps(all_channel_cleaned)
+            )
                 
             # Kirim data ke Pusher
             pusher_client.trigger('ecg-comm-unpad', 'new-ekg-data', {
@@ -185,7 +185,7 @@ def process_data(stop_event, data, pasien_id):
             print("Proses selesai untuk iterasi ini.")
     
     except Exception as e:
-        status_data = {"status": "stopped", "error":f'{str(e)}\n{traceback.format_exc()} Periksa alat atau penempatan elektroda!'}
+        status_data = {"status": "stopped", "error":f'PERIKSA KONEKSI ALAT ATAU PENEMPATAN ELEKTODA!!\n\nLebih lanjut:\n{str(e)}\n{traceback.format_exc()}'}
         raise
 
 
@@ -277,12 +277,17 @@ def test_process_data(request):
             # Parse JSON data
             data = json.loads(request.body)
             pasien_id = data.get('id_pasien')
+            ports = data.get('ports')
+            
 
             if not pasien_id:
                 raise Exception('id pasien tidak diberikan')
 
+            if not ports:
+                raise Exception('ports tidak dimasukkan')
+
             # Mulai thread untuk proses latar belakang
-            process_thread = ExceptionThread(target=process_data, args=(stop_event, data, pasien_id))
+            process_thread = ExceptionThread(target=process_data, args=(stop_event, data, pasien_id, ports))
             process_thread.daemon = True  # Agar thread berhenti saat server dimatikan
             process_thread.start()
 

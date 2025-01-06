@@ -7,7 +7,11 @@ import json
 # Create your views here.
 
 def search_page(request):
-    return render(request, 'record/main.html')
+    pasien_data = list(Pasien.objects.values('id_pasien', 'nik', 'nama'))
+    context = {
+        'jumlah_pasien':len(pasien_data)
+    }
+    return render(request, 'record/main.html', context)
 
 def search(request):
     pasien_data = list(Pasien.objects.values('id_pasien', 'nik', 'nama'))  # Mengambil id, NIK, dan nama pasien
@@ -22,7 +26,7 @@ def patient_record(request):
         return render(request, 'record/index.html', {'error':'TERDAPAT MASALAH!'})
     
     # Filter berdasarkan ID pasien
-    rekaman_queryset = RekamanEKG.objects.filter(id_pasien=id_pasien).order_by('id_rekaman')
+    rekaman_queryset = RekamanEKG.objects.filter(id_pasien=id_pasien).order_by('-id_rekaman')
 
     # Filter berdasarkan bulan jika dipilih
     if bulan_filter != 'all':

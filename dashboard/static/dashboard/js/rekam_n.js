@@ -1,10 +1,15 @@
 let isRecording = false; // Menyimpan status apakah perekaman sedang berlangsung
 
+window.onload = function () {
+    surestopRecording();
+}
+
 async function toggleRecording() {
     const button = document.getElementById("recordButton");
 
     if (isRecording) {
         // Jika sedang merekam, hentikan perekaman
+        clearInterval(pollingInterval)
         await stopRecording();
         // Ubah tombol kembali menjadi "Rekam"
         button.textContent = "Rekam";
@@ -183,8 +188,16 @@ async function startRecording(event) {
         }
         
 
+        // Ambil input ports
+        const selectport = document.getElementById('ports')
+        const ports = handleSelectChange(selectport)
+
         if (!pasienId) {
             throw new Error("ID pasien tidak valid.");
+        }
+
+        if (!ports) {
+            throw new Error("Anda belum memasukkan port!")
         }
 
         // Tutup modal konfirmasi jika terbuka
@@ -199,7 +212,7 @@ async function startRecording(event) {
                 "Content-Type": "application/json",
                 "X-CSRFToken": getCookie("csrftoken")
             },
-            body: JSON.stringify({ id_pasien: pasienId })
+            body: JSON.stringify({ id_pasien: pasienId, ports})
         });
 
         // if (!recordResponse.ok) throw new Error("Gagal memulai perekaman.");
@@ -343,7 +356,7 @@ async function pollProcessStatus() {
                 startButton.textContent = 'Rekam'
             }
             console.error("Terjadi kesalahan:", status.error);
-            alert("Terjadi kesalahan: " + status.error.message);
+            alert("Terjadi kesalahan: " + status.error);
         }
         
     } catch(error) {
@@ -357,4 +370,27 @@ async function pollProcessStatus() {
         console.error("Gagal mendapatkan status proses:", error);
         alert("Gagal mendapatkan status proses.");
     }
+}
+
+function surestopRecording() {
+    // Kirim request ke backend untuk menghentikan perekaman
+    fetch('/stop-process/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})  // Bisa ditambahkan data lain jika diperlukan
+    })
+    .then(response => response.json())
+    
+    .catch(error => {
+        console.error("Error:", error);
+    });
+}
+
+function handleSelectChange(selectElement) {
+    const selectedValue = selectElement.value;
+    const selectedText = selectElement.options[selectElement.selectedIndex].text;
+
+    return selectedValue
 }

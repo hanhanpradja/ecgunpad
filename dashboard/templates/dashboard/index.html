@@ -9,13 +9,23 @@
 <p class="container mb-5 custom-container">Website monitoring perekaman EKG real-time Smart Holter Portable</p>
 <!-- Card Container -->
 <div class="container mb-5 custom-container">
-    <!-- Tombol Rekam
     <div class="d-flex justify-content-end">
-        <button type="button" class="btn btn-primary mb-1 me-3 custom-width" onclick="showConfirmationModal()">Rekam</button>
-    </div> -->
-    <!-- Tombol Rekam / Hentikan Rekam -->
-    <div class="d-flex justify-content-end">
-        <button type="button" id="recordButton" class="btn btn-primary mb-1 me-3 custom-width" onclick="toggleRecording()">Rekam</button>
+        <form id="portForm" method="post">
+            <!-- <input 
+            type="text" 
+            class="form-control" 
+            id="ports" 
+            name="ports"
+            placeholder="Masukkan port bluetooth"
+            required> -->
+            <select class="form-select me-3" id="ports" name="ports" onchange="handleSelectChange(this)" required>
+                <option value="" disable selected>Pilih port</option>
+                <option value="/dev/rfcomm0">rfcomm0</option>
+                <option value="/dev/rfcomm1">rfcomm1</option>
+                <option value="/dev/rfcomm2">rfcomm2</option>
+            </select>
+        </form>
+        <button type="button" id="recordButton" class="btn btn-primary mb-1 me-3 ms-3 custom-width" onclick="toggleRecording()">Rekam</button>
     </div>
     <h3 class='mb-3'>Informasi Pengguna</h3>
     <div class="row">

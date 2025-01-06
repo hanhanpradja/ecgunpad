@@ -24,6 +24,8 @@
         maxlength="16">
     </div>
 
+    <h5 class="mb-3 text-center">Jumlah pasien terekam: {{ jumlah_pasien }}</h5>
+
     <!-- Tampilkan Kartu Pasien -->
     <div id="patientCards" class="row justify-content-center mb-3 w-100" style="display: none;">
     <!-- Kartu template -->
@@ -42,4 +44,5 @@
 
 {% block own-script %}
 <script src="{% static 'record/js/search.js' %}"></script>
+<script src="{% static 'record/js/script.js' %}"></script>
 {% endblock own-script %}

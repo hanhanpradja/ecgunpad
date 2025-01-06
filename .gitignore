@@ -1,0 +1,9 @@
+# Ignore all __pycache__ folders
+**/__pycache__/
+
+# Ignore migrations/__pycache__ specifically
+**/migrations/__pycache__/
+
+# Optionally ignore compiled Python files
+*.pyc
+*.pyo

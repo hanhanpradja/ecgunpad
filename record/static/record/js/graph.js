@@ -59,7 +59,7 @@ async function getSignalData(){
                 x: { beginAtZero: true, 
                     title: { display: true, text: 'Time (ms)' },
                     ticks: {
-                        stepSize: 1000,  // Langkah antar label sumbu X adalah 1000 ms
+                        stepSize: 1,  // Langkah antar label sumbu X adalah 1000 ms
                         callback: function(value, index, ticks) {
                             // Menampilkan hanya kelipatan 1000 ms
                             return value;
