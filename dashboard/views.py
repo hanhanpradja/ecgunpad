@@ -193,7 +193,7 @@ def process_data(stop_event, data, pasien_id, ports):
             print("Proses selesai untuk iterasi ini.")
     
     except Exception as e:
-        status_data = {"status": "stopped", "error":f'PERIKSA KONEKSI ALAT ATAU PENEMPATAN ELEKTODA!!\n\nLebih lanjut:\n{str(e)}\n{traceback.format_exc()}'}
+        status_data = {"status": "stopped", "error":f'PERIKSA KONEKSI ALAT ATAU PENEMPATAN ELEKTODA!!\n\nLebih lanjut:\n{str(e)}'}
         raise
 
 
