@@ -26,10 +26,6 @@ status_data = {'status':'idle', 'error': None}
 
 def get_process_status(request):
     global status_data
-    # if status_data['status'] == 'process' or status_data['status'] == 'idle':
-    #     status = 200
-    # else:
-    #     status = 400 
     return JsonResponse(status_data)
 
 
@@ -105,82 +101,94 @@ def process_data(stop_event, data, pasien_id, ports):
 
             # validasi data
             if not result or not isinstance(result, dict):
-                raise Exception('Data yang diterima tidak valid')
+                raise Exception(f'port bluetooth {ports} sepertinya belum di bind!')
             
-            # denoising
-            sampling_rate = int(len(result['I']) / 10)
-            column = list(result.keys())
-            all_channel_cleaned = {}
-            for i in column:
-                channel = np.array(result[i])
-                to_mv = channel * (2.4 / ((2**24))) * 1000
-                blw = remove_baseline_wander_wavelet(to_mv, 'db4')
-                denoised = dwt_denoise(blw, wavelet='sym8', level=3)
-                # denoised = filter_ecg_signal(to_mv, sampling_rate)
-                all_channel_cleaned[i] = list(denoised)
-            
-            # deteksi puncak r
-            r_peaks = {}
-            for i in column:
-                _, r = nk.ecg_peaks(np.array(all_channel_cleaned[i]), sampling_rate)
-                r_peaks[i] = r['ECG_R_Peaks']
-
-            # fitur ekstraksi
-            ch_features = {}
-            for i in column:
-                features = calculate_features(np.array(all_channel_cleaned[i]), detect_pqrst(np.array(all_channel_cleaned[i]), r_peaks[i], sampling_rate=sampling_rate), sampling_rate=sampling_rate)
-                ch_features[i] = features
-
-            # Prediksi menggunakan model TensorFlow
-            features_for_model = [
-                ch_features[column[1]]['RR'],
-                ch_features[column[1]]['PR'],
-                ch_features[column[1]]['QS'],
-                ch_features[column[1]]['QTc'],
-                ch_features[column[0]]['ST'],
-                ch_features[column[2]]['RS_ratio'],
-                ch_features[column[2]]['BPM']
-            ]
-
-            features_array = np.array(features_for_model).reshape(1, -1)
-            features_scaled = scaler.transform(features_array)
-            prediction = model.predict(features_scaled)
-            predicted_class = np.argmax(prediction, axis=1)
-            classification_result = pd.Series(predicted_class).map(class_map).values[0]
-            print(classification_result)
-
-            # Simpan data ke database jika hasil tidak NORMAL
-            rekaman = RekamanEKG.objects.create(
-                id_pasien_id=pasien_id,
-                tanggal=datetime.now().day,
-                bulan=datetime.now().month,
-                tahun=datetime.now().year,
-                klasifikasi=classification_result
-            )
-            IntervalData.objects.create(
-                id_rekaman=rekaman,
-                interval_rr=round(features_for_model[0], 1),
-                interval_pr=round(features_for_model[1], 1),
-                interval_qrs=round(features_for_model[2], 1),
-                interval_qt=round(features_for_model[3], 1),
-                interval_st=round(features_for_model[4], 1),
-                rs_ratio=round(features_for_model[5], 1),
-                bpm=round(features_for_model[6], 1)
-            )
-            SinyalData.objects.create(
-                id_rekaman=rekaman,
-                sinyal_ekg_10s=json.dumps(all_channel_cleaned)
-            )
+            try:
+                # denoising
+                sampling_rate = int(len(result['I']) / 10)
+                column = list(result.keys())
+                all_channel_cleaned = {}
+                for i in column:
+                    channel = np.array(result[i])
+                    to_mv = channel * (2.4 / ((2**24))) * 1000
+                    blw = remove_baseline_wander_wavelet(to_mv, 'db4')
+                    denoised = dwt_denoise(blw, wavelet='sym8', level=3)
+                    # denoised = filter_ecg_signal(to_mv, sampling_rate)
+                    all_channel_cleaned[i] = list(denoised)
                 
-            # Kirim data ke Pusher
-            pusher_client.trigger('ecg-comm-unpad', 'new-ekg-data', {
-                'id': pasien_id,
-                'nama': pasien_check.nama,
-                'umur': pasien_check.umur,
-                'klasifikasi': classification_result,
-                'record-date': datetime.now().isoformat(),
-                'device_status': 'Online',
-            })
+                # deteksi puncak r
+                r_peaks = {}
+                for i in column:
+                    _, r = nk.ecg_peaks(np.array(all_channel_cleaned[i]), sampling_rate)
+                    r_peaks[i] = r['ECG_R_Peaks']
+
+                # fitur ekstraksi
+                ch_features = {}
+                for i in column:
+                    features = calculate_features(np.array(all_channel_cleaned[i]), detect_pqrst(np.array(all_channel_cleaned[i]), r_peaks[i], sampling_rate=sampling_rate), sampling_rate=sampling_rate)
+                    ch_features[i] = features
+
+                # Prediksi menggunakan model TensorFlow
+                features_for_model = [
+                    ch_features[column[1]]['RR'],
+                    ch_features[column[1]]['PR'],
+                    ch_features[column[1]]['QS'],
+                    ch_features[column[1]]['QTc'],
+                    ch_features[column[0]]['ST'],
+                    ch_features[column[2]]['RS_ratio'],
+                    ch_features[column[2]]['BPM']
+                ]
+
+                features_array = np.array(features_for_model).reshape(1, -1)
+                features_scaled = scaler.transform(features_array)
+                prediction = model.predict(features_scaled)
+                predicted_class = np.argmax(prediction, axis=1)
+                classification_result = pd.Series(predicted_class).map(class_map).values[0]
+                print(classification_result)
+
+                # Simpan data ke database jika hasil tidak NORMAL
+                rekaman = RekamanEKG.objects.create(
+                    id_pasien_id=pasien_id,
+                    tanggal=datetime.now().day,
+                    bulan=datetime.now().month,
+                    tahun=datetime.now().year,
+                    klasifikasi=classification_result
+                )
+                IntervalData.objects.create(
+                    id_rekaman=rekaman,
+                    interval_rr=round(features_for_model[0], 1),
+                    interval_pr=round(features_for_model[1], 1),
+                    interval_qrs=round(features_for_model[2], 1),
+                    interval_qt=round(features_for_model[3], 1),
+                    interval_st=round(features_for_model[4], 1),
+                    rs_ratio=round(features_for_model[5], 1),
+                    bpm=round(features_for_model[6], 1)
+                )
+                SinyalData.objects.create(
+                    id_rekaman=rekaman,
+                    sinyal_ekg_10s=json.dumps(all_channel_cleaned)
+                )
+                    
+                # Kirim data ke Pusher
+                pusher_client.trigger('ecg-comm-unpad', 'new-ekg-data', {
+                    'id': pasien_id,
+                    'nama': pasien_check.nama,
+                    'umur': pasien_check.umur,
+                    'klasifikasi': classification_result,
+                    'record-date': datetime.now().isoformat(),
+                    'device_status': 'Online',
+                })
+
+            except:
+                pusher_client.trigger('ecg-comm-unpad', 'new-ekg-data', {
+                    'id': pasien_id,
+                    'nama': pasien_check.nama,
+                    'umur': pasien_check.umur,
+                    'klasifikasi': 'UNKNOWN',
+                    'record-date': datetime.now().isoformat(),
+                    'device_status': 'Online',
+                })
+                continue
 
             print("Proses selesai untuk iterasi ini.")
     

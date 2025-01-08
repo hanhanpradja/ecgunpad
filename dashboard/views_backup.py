@@ -21,6 +21,17 @@ import random
 import numpy as np
 import pandas as pd
 
+# Status
+status_data = {'status':'idle', 'error': None}
+
+def get_process_status(request):
+    global status_data
+    # if status_data['status'] == 'process' or status_data['status'] == 'idle':
+    #     status = 200
+    # else:
+    #     status = 400 
+    return JsonResponse(status_data)
+
 
 # Event config.
 stop_event = threading.Event()
@@ -76,66 +87,69 @@ def new_pasien_rekam(request):
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-def process_data(stop_event, data, pasien_id):
-    while not stop_event.is_set():
-        if stop_event.is_set():
-            break
-        
-        # cek pasien
-        pasien_check = Pasien.objects.filter(id_pasien=pasien_id).first()
-        if not pasien_check:
-            raise Exception('Pasien tidak ditemukan')
-        
-        # koneksi ke device
-        result = record_bluetooth_data(port='COM8')
+def process_data(stop_event, data, pasien_id, ports):
+    global status_data
+    try:
+        status_data = {'status':'process', 'error':None}
+        while not stop_event.is_set():
+            if stop_event.is_set():
+                raise Exception('Perekaman dihentikan')
+            
+            # cek pasien
+            pasien_check = Pasien.objects.filter(id_pasien=pasien_id).first()
+            if not pasien_check:
+                raise Exception('Pasien tidak ditemukan')
+            
+            # koneksi ke device
+            result = record_bluetooth_data(port=ports)
 
-        # validasi data
-        if not result or not isinstance(result, dict):
-            raise Exception('Data yang diterima tidak valid')
-        
-        # denoising
-        sampling_rate = int(len(result['I']) / 10)
-        column = list(result.keys())
-        all_channel_cleaned = {}
-        for i in column:
-            channel = np.array(result[i])
-            to_mv = channel * (2.4 / ((2**24))) * 1000
-            denoised = dwt_denoise(to_mv, wavelet='sym8', level=3)
-            # denoised = filter_ecg_signal(to_mv, sampling_rate)
-            all_channel_cleaned[i] = denoised
-        
-        # deteksi puncak r
-        r_peaks = {}
-        for i in column:
-            _, r = nk.ecg_peaks(all_channel_cleaned[i], sampling_rate)
-            r_peaks[i] = r['ECG_R_Peaks']
+            # validasi data
+            if not result or not isinstance(result, dict):
+                raise Exception('Data yang diterima tidak valid')
+            
+            # denoising
+            sampling_rate = int(len(result['I']) / 10)
+            column = list(result.keys())
+            all_channel_cleaned = {}
+            for i in column:
+                channel = np.array(result[i])
+                to_mv = channel * (2.4 / ((2**24))) * 1000
+                blw = remove_baseline_wander_wavelet(to_mv, 'db4')
+                denoised = dwt_denoise(blw, wavelet='sym8', level=3)
+                # denoised = filter_ecg_signal(to_mv, sampling_rate)
+                all_channel_cleaned[i] = list(denoised)
+            
+            # deteksi puncak r
+            r_peaks = {}
+            for i in column:
+                _, r = nk.ecg_peaks(np.array(all_channel_cleaned[i]), sampling_rate)
+                r_peaks[i] = r['ECG_R_Peaks']
 
-        # fitur ekstraksi
-        ch_features = {}
-        for i in column:
-            features = calculate_features(all_channel_cleaned[i], detect_pqrst(all_channel_cleaned[i], r_peaks[i], sampling_rate=sampling_rate), sampling_rate=sampling_rate)
-            ch_features[i] = features
+            # fitur ekstraksi
+            ch_features = {}
+            for i in column:
+                features = calculate_features(np.array(all_channel_cleaned[i]), detect_pqrst(np.array(all_channel_cleaned[i]), r_peaks[i], sampling_rate=sampling_rate), sampling_rate=sampling_rate)
+                ch_features[i] = features
 
-        # Prediksi menggunakan model TensorFlow
-        features_for_model = [
-            ch_features[column[1]]['RR'],
-            ch_features[column[1]]['PR'],
-            ch_features[column[1]]['QS'],
-            ch_features[column[1]]['QTc'],
-            ch_features[column[0]]['ST'],
-            ch_features[column[2]]['RS_ratio'],
-            ch_features[column[2]]['BPM']
-        ]
+            # Prediksi menggunakan model TensorFlow
+            features_for_model = [
+                ch_features[column[1]]['RR'],
+                ch_features[column[1]]['PR'],
+                ch_features[column[1]]['QS'],
+                ch_features[column[1]]['QTc'],
+                ch_features[column[0]]['ST'],
+                ch_features[column[2]]['RS_ratio'],
+                ch_features[column[2]]['BPM']
+            ]
 
-        features_array = np.array(features_for_model).reshape(1, -1)
-        features_scaled = scaler.transform(features_array)
-        prediction = model.predict(features_scaled)
-        predicted_class = np.argmax(prediction, axis=1)
-        classification_result = pd.Series(predicted_class).map(class_map).values[0]
-        print(classification_result)
+            features_array = np.array(features_for_model).reshape(1, -1)
+            features_scaled = scaler.transform(features_array)
+            prediction = model.predict(features_scaled)
+            predicted_class = np.argmax(prediction, axis=1)
+            classification_result = pd.Series(predicted_class).map(class_map).values[0]
+            print(classification_result)
 
-        # Simpan data ke database jika hasil tidak NORMAL
-        if classification_result != 'NORMAL':
+            # Simpan data ke database jika hasil tidak NORMAL
             rekaman = RekamanEKG.objects.create(
                 id_pasien_id=pasien_id,
                 tanggal=datetime.now().day,
@@ -145,30 +159,35 @@ def process_data(stop_event, data, pasien_id):
             )
             IntervalData.objects.create(
                 id_rekaman=rekaman,
-                interval_rr=features_for_model[0],
-                interval_pr=features_for_model[1],
-                interval_qrs=features_for_model[2],
-                interval_qt=features_for_model[3],
-                interval_st=features_for_model[4],
-                rs_ratio=features_for_model[5],
-                bpm=features_for_model[6]
+                interval_rr=round(features_for_model[0], 1),
+                interval_pr=round(features_for_model[1], 1),
+                interval_qrs=round(features_for_model[2], 1),
+                interval_qt=round(features_for_model[3], 1),
+                interval_st=round(features_for_model[4], 1),
+                rs_ratio=round(features_for_model[5], 1),
+                bpm=round(features_for_model[6], 1)
             )
             SinyalData.objects.create(
                 id_rekaman=rekaman,
-                sinyal_ekg_10s=json.dumps(result)
+                sinyal_ekg_10s=json.dumps(all_channel_cleaned)
             )
-            
-        # Kirim data ke Pusher
-        pusher_client.trigger('ecg-comm-unpad', 'new-ekg-data', {
-            'id': pasien_id,
-            'nama': pasien_check.nama,
-            'umur': pasien_check.umur,
-            'klasifikasi': classification_result,
-            'record-date': datetime.now().isoformat(),
-            'device_status': 'Online',
-        })
+                
+            # Kirim data ke Pusher
+            pusher_client.trigger('ecg-comm-unpad', 'new-ekg-data', {
+                'id': pasien_id,
+                'nama': pasien_check.nama,
+                'umur': pasien_check.umur,
+                'klasifikasi': classification_result,
+                'record-date': datetime.now().isoformat(),
+                'device_status': 'Online',
+            })
 
-        print("Proses selesai untuk iterasi ini.")
+            print("Proses selesai untuk iterasi ini.")
+    
+    except Exception as e:
+        status_data = {"status": "stopped", "error":f'PERIKSA KONEKSI ALAT ATAU PENEMPATAN ELEKTODA!!\n\nLebih lanjut:\n{str(e)}\n{traceback.format_exc()}'}
+        raise
+
 
 
 
@@ -249,29 +268,35 @@ def process_in_background(stop_event, data, pasien_id):
 
 @csrf_exempt
 def test_process_data(request):
-    global stop_event
+    global stop_event, status_data
 
     if request.method == "POST":
         stop_event.clear()
-        # Parse JSON data
-        data = json.loads(request.body)
-        pasien_id = data.get('id_pasien')
 
-        if not pasien_id:
-            raise Exception('id pasien tidak diberikan')
+        try:
+            # Parse JSON data
+            data = json.loads(request.body)
+            pasien_id = data.get('id_pasien')
+            ports = data.get('ports')
+            
 
-        # Mulai thread untuk proses latar belakang
-        process_thread = ExceptionThread(target=process_data, args=(stop_event, data, pasien_id))
-        process_thread.daemon = True  # Agar thread berhenti saat server dimatikan
-        process_thread.start()
-        process_thread.join()
+            if not pasien_id:
+                raise Exception('id pasien tidak diberikan')
 
-        if process_thread.exception:
+            if not ports:
+                raise Exception('ports tidak dimasukkan')
+
+            # Mulai thread untuk proses latar belakang
+            process_thread = ExceptionThread(target=process_data, args=(stop_event, data, pasien_id, ports))
+            process_thread.daemon = True  # Agar thread berhenti saat server dimatikan
+            process_thread.start()
+
+            return JsonResponse({"message": "Proses telah dimulai di latar belakang."}, status=200)
+
+        except Exception as e:
             stop_event.set()
-            print(str(process_thread.tracebackexcept))
-            return JsonResponse({'error':f'terjadi kesalahan {str(process_thread.exception)}\nPERIKSA ALAT ATAU PENEMPATAN ELEKTRODA!'}, status=400)
-
-        return JsonResponse({"message": "Proses telah dimulai di latar belakang."}, status=200)
+            print(traceback.format_exc())
+            return JsonResponse({'error':f'terjadi kesalahan {str(e)}\nPERIKSA ALAT ATAU PENEMPATAN ELEKTRODA!'}, status=400)
 
     return JsonResponse({"error": "Invalid request method. Use POST to start or DELETE to stop."}, status=405)
 
