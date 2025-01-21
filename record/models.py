@@ -8,6 +8,7 @@ class RekamanEKG(models.Model):
     tanggal = models.IntegerField()  # Tanggal perekaman
     bulan = models.IntegerField()  # Bulan perekaman
     tahun = models.IntegerField()  # Tahun perekaman
+    waktu = models.TimeField() # Waktu perekaman WIB
     klasifikasi = models.CharField(max_length=100)  # hasil klasifikasi model DNN
 
     def __str__(self):

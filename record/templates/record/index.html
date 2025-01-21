@@ -62,6 +62,7 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Diagnosa</th>
+                    <th scope="col">Waktu</th>
                     <th scope="col">Tanggal</th>
                 </tr>
             </thead>
@@ -70,6 +71,7 @@
                 <tr onclick="window.location.href='detail/?id_pasien={{ id_pasien }}&id_rekaman={{ record.id_rekaman }}'">
                     <th scope="row">{{ forloop.counter }}</th>
                     <td>{{ record.klasifikasi }}</td>
+                    <td>{{ record.waktu }}</td>
                     <td>{{ record.tanggal }}/{{ record.bulan }}/{{ record.tahun }}</td>
                 </tr>
                 {% empty %}

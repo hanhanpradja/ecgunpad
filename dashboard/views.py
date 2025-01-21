@@ -20,9 +20,11 @@ import traceback
 import random
 import numpy as np
 import pandas as pd
+import pytz
 
-# Status
+# Status and Time
 status_data = {'status':'idle', 'error': None}
+wib = pytz.timezone('Asia/Jakarta')
 
 def get_process_status(request):
     global status_data
@@ -149,11 +151,13 @@ def process_data(stop_event, data, pasien_id, ports):
                 # Simpan data ke database jika hasil tidak NORMAL
                 rekaman = RekamanEKG.objects.create(
                     id_pasien_id=pasien_id,
-                    tanggal=datetime.now().day,
-                    bulan=datetime.now().month,
-                    tahun=datetime.now().year,
+                    tanggal=datetime.now(wib).day,
+                    bulan=datetime.now(wib).month,
+                    tahun=datetime.now(wib).year,
+                    waktu =datetime.now(wib).time(),
                     klasifikasi=classification_result
                 )
+                
                 IntervalData.objects.create(
                     id_rekaman=rekaman,
                     interval_rr=round(features_for_model[0], 1),
@@ -195,84 +199,6 @@ def process_data(stop_event, data, pasien_id, ports):
     except Exception as e:
         status_data = {"status": "stopped", "error":f'PERIKSA KONEKSI ALAT ATAU PENEMPATAN ELEKTODA!!\n\nLebih lanjut:\n{str(e)}'}
         raise
-
-
-
-
-def process_in_background(stop_event, data, pasien_id):
-    while not stop_event.is_set():
-        try:
-            if stop_event.is_set():
-                break
-
-
-            # Cek apakah pasien ada di database
-            pasien_check = Pasien.objects.filter(id_pasien=pasien_id).first()
-            if not pasien_check:
-                print("Pasien tidak ditemukan.")
-                continue
-
-            # Log informasi awal
-            print(f"Memulai perekaman untuk pasien ID: {pasien_id}")
-
-            # Simulasi pemrosesan data (record_bluetooth_data)
-            try:
-                result = record_bluetooth_data(port='COM8')  # Pastikan port benar
-            except Exception as e:
-                print(f"Gagal membaca data dari perangkat: {str(e)}")
-                continue
-
-            # Validasi hasil data
-            if not result or not isinstance(result, dict):
-                print("Data yang diterima tidak valid.")
-                continue
-
-            classification_result = random.choice(list(class_map.values()))
-
-            # Simpan data ke database jika hasil tidak NORMAL
-            if classification_result != 'NORMAL':
-                try:
-                    rekaman = RekamanEKG.objects.create(
-                        id_pasien_id=pasien_id,
-                        tanggal=datetime.now().day,
-                        bulan=datetime.now().month,
-                        tahun=datetime.now().year,
-                        klasifikasi=classification_result
-                    )
-                    IntervalData.objects.create(
-                        id_rekaman=rekaman,
-                        interval_rr=random.randint(1, 10),
-                        interval_pr=random.randint(1, 10),
-                        interval_qrs=random.randint(1, 10),
-                        interval_qt=random.randint(1, 10),
-                        interval_st=random.randint(1, 10),
-                        rs_ratio=random.randint(1, 10),
-                        bpm=random.randint(1, 10)
-                    )
-                    SinyalData.objects.create(
-                        id_rekaman=rekaman,
-                        sinyal_ekg_10s=json.dumps(result)
-                    )
-                except Exception as e:
-                    print(f"Gagal menyimpan data ke database: {str(e)}\n{traceback.format_exc()}")
-                    continue
-
-            # Kirim data ke Pusher
-            try:
-                pusher_client.trigger('ecg-comm-unpad', 'new-ekg-data', {
-                    'id': pasien_id,
-                    'nama': pasien_check.nama,
-                    'umur': pasien_check.umur,
-                    'klasifikasi': classification_result,
-                    'record-date': datetime.now().isoformat(),
-                    'device_status': 'Online',
-                })
-            except Exception as e:
-                print(f"Gagal mengirim data ke Pusher: {str(e)}\n{traceback.format_exc()}")
-
-            print("Proses selesai untuk iterasi ini.")
-        except Exception as e:
-            print(f"Kesalahan tidak terduga: {str(e)}\n{traceback.format_exc()}")
 
 @csrf_exempt
 def test_process_data(request):
