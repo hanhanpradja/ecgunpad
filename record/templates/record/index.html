@@ -11,7 +11,11 @@
 
 <div class="container mb-5 custom-container">
     <h3 class="mb-3">Record Table</h3>
-
+    <div class="mb-4">
+        <a class="btn btn-primary" href="/record/">
+            <span class="material-symbols-outlined">arrow_back</span>
+        </a>
+    </div>
     <!--Filter di bagian atas tabel-->
     <form method="get" class="d-flex justify-content-end align-items-center mb-3 gap-3">
         <!-- Hidden input untuk ID pasien -->
@@ -63,7 +67,7 @@
             </thead>
             <tbody>
                 {% for record in rekaman_data %}
-                <tr onclick="window.location.href='detail/?id_rekaman={{ record.id_rekaman }}'">
+                <tr onclick="window.location.href='detail/?id_pasien={{ id_pasien }}&id_rekaman={{ record.id_rekaman }}'">
                     <th scope="row">{{ forloop.counter }}</th>
                     <td>{{ record.klasifikasi }}</td>
                     <td>{{ record.tanggal }}/{{ record.bulan }}/{{ record.tahun }}</td>

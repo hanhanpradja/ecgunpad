@@ -39,6 +39,7 @@ def patient_record(request):
 
     # Kirim context ke template
     context = {
+        'id_pasien': id_pasien,
         'rekaman_data': page_obj,  # Data rekaman per halaman
         'paginator': paginator,   # Objek paginator untuk kontrol navigasi
         'current_page': page_obj.number,  # Halaman saat ini
@@ -50,7 +51,8 @@ def patient_record(request):
 
 def detail(request):
     id_rekaman = request.GET.get('id_rekaman')  # Ambil ID rekaman dari query parameter
-    
+    id_pasien = request.GET.get('id_pasien')
+
     # Filter data berdasarkan ID rekaman
     detail_interval_data = IntervalData.objects.filter(id_rekaman=id_rekaman).first()
     if not detail_interval_data:
@@ -66,6 +68,7 @@ def detail(request):
     context = {
         'detail_interval_data': detail_interval_data,
         'sinyal_ekg_data': sinyal_ekg_parsed,
+        'id_pasien' : id_pasien
     }
 
     return render(request, 'record/detail.html', context)

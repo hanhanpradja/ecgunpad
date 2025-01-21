@@ -20,7 +20,7 @@ async function suggestionPatient() {
     const allPatient = await fetchPatient();
 
     const suggestions = allPatient.filter((patient) =>
-        patient.nik.toLowerCase().includes(input)
+        patient.nama.toLowerCase().includes(input)
     );
 
     const suggestionBox = document.getElementById('patientCards');
@@ -29,7 +29,7 @@ async function suggestionPatient() {
     suggestionBox.innerHTML = "";
 
     // Tampilkan saran hanya jika input memenuhi kriteria
-    if (input.trim() && input.length >= 6 && suggestions.length > 0) {
+    if (input.trim() && suggestions.length > 0) {
         suggestions.forEach(patient => {
             // Buat elemen card
             const card = document.createElement('div');

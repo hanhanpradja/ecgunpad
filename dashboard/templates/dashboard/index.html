@@ -177,7 +177,10 @@
                     </div>
                     <div class="mb-3">
                         <label for="NIK" class="form-label">NIK</label>
-                        <input type="text" class="form-control" id="NIK" placeholder="Masukkan NIK anda" required>
+                        <input type="text" class="form-control" id="NIK" placeholder="Masukkan NIK anda" oninput='validateNIKs(this)' required>
+                        <div id="nikWarning" class="form-text text-danger" style="display: none;">
+                            NIK harus terdiri dari 16 digit.
+                        </div>
                     </div>
                 </form>
             </div>

@@ -12,6 +12,11 @@
             <div class="col-md-12">
                 <h1 class="text-start mb-4">Detail Record</h1>
             </div>
+            <div class="mb-4">
+                <a class="btn btn-primary" href="/record/patient-record/?id_pasien={{id_pasien}}">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                </a>
+            </div>
         </div>
         <div class="row g-4">
             <!-- RR -->
@@ -168,5 +173,7 @@
     });
 </script> -->
 <script src="{% static 'record/js/graph.js' %}"></script>
+<script src="{% static 'record/js/script.js' %}"></script>
+<script src="{% static 'record/js/search.js' %}"></script>
 {% endblock own-script %}
     

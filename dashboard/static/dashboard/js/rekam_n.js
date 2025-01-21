@@ -44,6 +44,25 @@ function openRegistrationModal() {
     registrationModal.show();
 }
 
+function validateNIKs(input) {
+    const nikValue = input.value;
+    const nikWarning = document.getElementById('nikWarning');
+
+    if (nikValue.length < 16) {
+        nikWarning.style.display = "block";
+    } else {
+        nikWarning.style.display = "none";
+    }
+
+    if (nikValue.length > 16) {
+        input.value = nikValue.slice(0, 16);
+    }
+
+    if (/[^\d]/.test(nikValue)) {
+        input.value = nikValue.replace(/[^\d]/g, ""); // Hapus karakter non-digit
+    }
+}
+
 // Function to fetch NIKs from Django backend
 async function fetchNIKs() {
     const response = await fetch("/api/niks/");
