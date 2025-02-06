@@ -7,3 +7,6 @@
 # Optionally ignore compiled Python files
 *.pyc
 *.pyo
+
+# ignore vscode adjustment
+**.vscode
