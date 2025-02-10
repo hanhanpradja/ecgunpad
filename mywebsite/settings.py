@@ -80,8 +80,12 @@ WSGI_APPLICATION = "mywebsite.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "ecgcoba",
+        "USER": "root",
+        "PASSWORD": "123ecg123",
+        "HOST": "34.45.171.56",
+        "PORT": "3306",
     }
 }
 
