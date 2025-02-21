@@ -10,3 +10,6 @@
 
 # ignore vscode adjustment
 **.vscode
+
+# ignore cred
+cred.txt
