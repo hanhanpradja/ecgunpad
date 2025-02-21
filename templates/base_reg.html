@@ -1,0 +1,40 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ECG UNPAD</title>
+    {% include "snippets/style.html" %}
+    {% include "snippets/script.html" %}
+
+    {% block own_style %}
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    {% endblock own_style %}
+
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row login-container align-items-center">
+        <div class="col-md-6 d-flex align-items-center justify-content-center">
+            <div class="info-box">
+                {% block own_info %}
+                
+                {% endblock %}
+            </div>
+        </div>
+
+        <!-- Form Login -->
+        <div class="col-md-6 d-flex align-items-center justify-content-center">
+            <div class="login-box w-75">
+                {% block own_form %}
+                    
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+

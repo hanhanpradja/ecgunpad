@@ -128,3 +128,23 @@
 .table-row {
     transition: background-color 0.3s ease, color 0.3s ease; /* Transisi untuk perubahan warna latar belakang dan teks */
 }
+
+.login-container {
+    height: 100vh;
+}
+.login-box {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+}
+.info-box {
+    padding: 40px;
+    text-align: center;
+}
+.info-box img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}

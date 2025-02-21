@@ -26,11 +26,6 @@ import pytz
 status_data = {'status':'idle', 'error': None}
 wib = pytz.timezone('Asia/Jakarta')
 
-def get_process_status(request):
-    global status_data
-    return JsonResponse(status_data)
-
-
 # Event config.
 stop_event = threading.Event()
 
@@ -54,8 +49,18 @@ class_map = {
 }
 
 # Create your views here.
+def register(request):
+    return render(request, 'dashboard/register.html')
+
+def login(request):
+    return render(request, 'dashboard/login.html')
+
 def index(request):
     return render(request, "dashboard/index.html")
+
+def get_process_status(request):
+    global status_data
+    return JsonResponse(status_data)
 
 @csrf_exempt
 def new_pasien_rekam(request):
