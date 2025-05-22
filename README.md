@@ -20,7 +20,7 @@ Sistem ini dikembangkan menggunakan stack berikut:
 
 > Letakkan diagram arsitektur sistem di bawah ini
 
-![System Architecture](assets/system_architecture.png)
+![System Architecture](assets/arsitektursistem.png)
 
 ## 🧠 Arsitektur Model DNN
 
@@ -63,7 +63,7 @@ Label disederhanakan menjadi 4 kelas berdasarkan kondisi medis dan literatur.
 
 > Letakkan diagram ERD (Entity Relationship Diagram) database di bawah ini
 
-![Database Schema](assets/database_erd.png)
+![Database Schema](assets/Diagram_Database.png)
 
 ### Tabel utama:
 - `Pasien`: menyimpan data identitas
