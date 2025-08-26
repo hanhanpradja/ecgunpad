@@ -60,9 +60,6 @@ Label disederhanakan menjadi 4 kelas berdasarkan kondisi medis dan literatur.
 | Data Processing| NeuroKit2, PyWavelets    |
 
 ## 🗃️ Struktur Database
-
-> Letakkan diagram ERD (Entity Relationship Diagram) database di bawah ini
-
 ![Database Schema](assets/Diagram_Database.png)
 
 ### Tabel utama:
