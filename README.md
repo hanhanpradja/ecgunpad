@@ -17,9 +17,6 @@ Sistem ini dikembangkan menggunakan stack berikut:
 - **Database**: Django ORM (PostgreSQL/MySQL)
 
 ## 🖼️ Arsitektur Sistem
-
-> Letakkan diagram arsitektur sistem di bawah ini
-
 ![System Architecture](assets/arsitektursistem.png)
 
 ## 🧠 Arsitektur Model DNN
